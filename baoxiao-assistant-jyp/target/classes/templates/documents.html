@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('单据 · 报销助手（JYP）')"></head>
+<body>
+<div th:replace="fragments :: nav('documents')"></div>
+
+<div class="wrap">
+    <div id="alert" class="alert"></div>
+
+    <h2 class="page-title">我的单据</h2>
+    <p class="page-sub">
+        系统按单据归属做授权校验：你只能查询<strong>本人</strong>提交的单据，跨人访问会被拒绝。
+        业务事实由财务专员周敏核对。
+    </p>
+
+    <!-- ============ 员工：提交与查询本人单据 ============ -->
+    <div class="grid cols-2">
+        <div class="card">
+            <h3>提交新单据</h3>
+            <label>费用类别</label>
+            <select id="category">
+                <option value="交通">交通</option>
+                <option value="餐饮">餐饮</option>
+                <option value="差旅">差旅</option>
+                <option value="办公">办公</option>
+                <option value="招待">招待</option>
+            </select>
+            <label>金额（元）</label>
+            <input id="amount" type="number" step="0.01" min="0.01" placeholder="如 86.00">
+            <label>发生日期</label>
+            <input id="expenseDate" type="date">
+            <label>事由说明</label>
+            <input id="summary" placeholder="如 客户现场往返网约车">
+            <div class="btn-row" style="margin-top:16px">
+                <button class="btn-primary" onclick="createDoc()">提交单据</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>授权与权限说明</h3>
+            <p class="muted">
+                · 员工：<code>GET /api/documents/my</code>，仅返回 ownerUsername = 当前登录名的单据；<br>
+                · 直接按 ID 访问他人单据会返回 <strong>403</strong>；<br>
+                · 财务专员：<code>GET /api/documents</code>，可查看全部单据并核对业务事实；<br>
+                · 行政专员：不参与单据查询。
+            </p>
+            <div class="btn-row">
+                <button class="btn-ghost btn-sm" onclick="probeForbidden()">测试越权访问（预期被拒）</button>
+            </div>
+            <div id="probeResult" class="hint"></div>
+        </div>
+    </div>
+
+    <div class="section-title">我的单据列表</div>
+    <div id="myDocs" class="table-card"></div>
+
+    <!-- ============ 财务专员：事实核对 ============ -->
+    <div th:if="${user != null and user.role.name() == 'FINANCE'}">
+        <div class="section-title" id="verify">业务事实核对（财务专员）</div>
+        <p class="page-sub">
+            你正在以财务专员（周敏）身份核对单据的<strong>业务事实</strong>：确认发票与行程、人数、事由是否属实。
+            核对结论会留痕（核对人、时间、意见），并反馈给员工。
+        </p>
+        <div id="allDocs" class="table-card"></div>
+    </div>
+</div>
+
+<script th:src="@{/app.js}"></script>
+<script th:inline="javascript">
+    const ROLE = /*[[${user != null ? user.role.name() : ''}]]*/ '';
+    const alertEl = document.getElementById('alert');
+
+    function statusBadge(status) {
+        const map = {
+            SUBMITTED: '已提交', CHECKING: '核对中',
+            VERIFIED: '事实已核对', REJECTED: '事实有误'
+        };
+        return '<span class="badge ' + status + '">' + (map[status] || status) + '</span>';
+    }
+
+    function docRow(doc, finance) {
+        const verifyCell = finance ? `
+            <td>
+                ${doc.status === 'SUBMITTED' ? `<button class="btn-ghost btn-sm" onclick="startChecking(${doc.id})">受理</button>` : ''}
+                <button class="btn-ok btn-sm" onclick="verifyDoc(${doc.id}, true)">事实属实</button>
+                <button class="btn-bad btn-sm" onclick="verifyDoc(${doc.id}, false)">事实有误</button>
+            </td>` : `
+            <td class="muted">
+                ${doc.factVerified ? ('已由 ' + esc(doc.verifiedBy || '财务') + ' 核对') : '待财务核对'}
+                ${doc.verifyNote ? '<br><span class="hint">' + esc(doc.verifyNote) + '</span>' : ''}
+            </td>`;
+        return `
+        <tr>
+            <td>${esc(doc.docNo)}</td>
+            <td>${esc(doc.applicantName)}</td>
+            <td>${esc(doc.category)}</td>
+            <td>${money(doc.amount)}</td>
+            <td>${esc(doc.expenseDate)}</td>
+            <td>${esc(doc.summary || '')}</td>
+            <td>${statusBadge(doc.status)}</td>
+            ${verifyCell}
+        </tr>`;
+    }
+
+    function docTable(list, finance) {
+        if (!list.length) {
+            return '<div class="empty">暂无单据</div>';
+        }
+        return `<table>
+            <thead><tr>
+                <th>单据编号</th><th>申请人</th><th>类别</th><th>金额</th><th>发生日期</th><th>事由</th><th>状态</th>
+                <th>${finance ? '业务事实核对' : '核对结果'}</th>
+            </tr></thead>
+            <tbody>${list.map(d => docRow(d, finance)).join('')}</tbody>
+        </table>`;
+    }
+
+    async function loadMine() {
+        try {
+            const list = await api('/api/documents/my');
+            document.getElementById('myDocs').innerHTML = docTable(list, false);
+        } catch (e) {
+            showAlert(alertEl, e.message, false);
+        }
+    }
+
+    async function loadAll() {
+        if (ROLE !== 'FINANCE') return;
+        try {
+            const list = await api('/api/documents');
+            document.getElementById('allDocs').innerHTML = docTable(list, true);
+        } catch (e) {
+            showAlert(alertEl, e.message, false);
+        }
+    }
+
+    async function createDoc() {
+        const body = {
+            category: document.getElementById('category').value,
+            amount: parseFloat(document.getElementById('amount').value),
+            expenseDate: document.getElementById('expenseDate').value || null,
+            summary: document.getElementById('summary').value.trim()
+        };
+        if (!body.amount || !body.expenseDate) {
+            showAlert(alertEl, '请填写金额与发生日期', false);
+            return;
+        }
+        try {
+            const doc = await api('/api/documents', {method: 'POST', body});
+            showAlert(alertEl, '单据 ' + doc.docNo + ' 已提交，等待财务专员核对业务事实', true);
+            document.getElementById('amount').value = '';
+            document.getElementById('summary').value = '';
+            await loadMine();
+        } catch (e) {
+            showAlert(alertEl, e.message, false);
+        }
+    }
+
+    async function verifyDoc(id, verified) {
+        const note = prompt(verified ? '请填写核对意见（业务事实属实）' : '请填写事实有误的原因', '');
+        if (note === null) return;
+        try {
+            await api('/api/documents/' + id + '/verify',
+                {method: 'POST', body: {verified: verified, note: note}});
+            showAlert(alertEl, '核对结论已记录', true);
+            await loadAll();
+            await loadMine();
+        } catch (e) {
+            showAlert(alertEl, e.message, false);
+        }
+    }
+
+    async function startChecking(id) {
+        try {
+            await api('/api/documents/' + id + '/checking', {method: 'POST'});
+            await loadAll();
+        } catch (e) {
+            showAlert(alertEl, e.message, false);
+        }
+    }
+
+    /** 演示授权校验：尝试访问一个不属于自己的单据。 */
+    async function probeForbidden() {
+        const box = document.getElementById('probeResult');
+        try {
+            const all = ROLE === 'FINANCE' ? await api('/api/documents') : null;
+            let targetId = null;
+            if (all) {
+                const other = all.find(d => d.ownerUsername !== null);
+                targetId = other ? other.id : null;
+            } else {
+                const mine = await api('/api/documents/my');
+                targetId = (mine.length ? Math.max.apply(null, mine.map(d => d.id)) : 1) + 9999;
+            }
+            await api('/api/documents/my/' + targetId);
+            box.textContent = '（本次未触发拒绝，可能是因为该单据恰好属于你）';
+        } catch (e) {
+            box.textContent = '已按预期拒绝：' + e.message;
+        }
+    }
+
+    (async function init() {
+        document.getElementById('expenseDate').value = new Date().toISOString().slice(0, 10);
+        await loadMine();
+        await loadAll();
+    })();
+</script>
+</body>
+</html>

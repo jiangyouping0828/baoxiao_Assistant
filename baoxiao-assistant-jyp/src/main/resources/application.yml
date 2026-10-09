@@ -1,0 +1,60 @@
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 60m
+
+spring:
+  application:
+    name: baoxiao-assistant-jyp
+  datasource:
+    url: jdbc:h2:mem:baoxiao_jyp;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  thymeleaf:
+    cache: false
+
+ai:
+  # ---------------------------------------------------------------
+  # 默认 mock=true：无需任何外部模型即可离线跑通全流程。
+  # 接入真实模型时把 mock 改为 false，并按需选择 provider。
+  # ---------------------------------------------------------------
+  llm:
+    provider: mock
+    model: mock-llm
+    apiKey:
+    baseUrl: http://localhost:11434/api/chat
+    mock: true
+    timeoutSeconds: 20
+    maxRetries: 2
+
+    # 切换到智谱 GLM（示例）：
+    # provider: zhipu
+    # model: glm-4-flash
+    # apiKey: ${ZHIPU_API_KEY:}
+    # baseUrl: https://open.bigmodel.cn/api/paas/v4/chat/completions
+    # mock: false
+    #
+    # 切换到本地 Ollama：
+    # provider: ollama
+    # model: qwen2.5:7b
+    # baseUrl: http://localhost:11434/api/chat
+    # mock: false
+
+  rag:
+    # keyword：轻量关键词检索（离线可用，默认）
+    # vector ：需要本地 Ollama embedding 服务
+    retriever: keyword
+    topK: 5

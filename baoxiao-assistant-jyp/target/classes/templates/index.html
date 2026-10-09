@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('工作台 · 报销助手（JYP）')"></head>
+<body>
+<div th:replace="fragments :: nav('home')"></div>
+
+<div class="wrap">
+    <div id="alert" class="alert"></div>
+
+    <h2 class="page-title">你好，<span th:text="${user != null ? user.displayName : ''}">用户</span></h2>
+    <p class="page-sub">
+        当前角色：<span class="role-chip" th:classappend="${user != null ? user.role.name() : ''}"
+                    th:text="${user != null ? user.roleLabel : ''}">角色</span>
+        <span class="muted" th:text="${user != null and user.department != null ? ' · ' + user.department : ''}"></span>
+    </p>
+
+    <div class="grid cols-3">
+        <div class="card stat">
+            <div class="num" id="statPolicies">-</div>
+            <div class="lbl">现行有效制度</div>
+            <div class="hint">仅统计已发布且在生效期内的制度</div>
+        </div>
+        <div class="card stat">
+            <div class="num" id="statMyDocs">-</div>
+            <div class="lbl">我的单据</div>
+            <div class="hint">经授权仅可查询本人单据</div>
+        </div>
+        <div class="card stat">
+            <div class="num" id="statPending">-</div>
+            <div class="lbl" th:text="${user != null and user.role.name() == 'FINANCE'} ? '待核对单据' : '已核对单据'">数量</div>
+            <div class="hint" th:text="${user != null and user.role.name() == 'FINANCE'} ? '业务事实待财务专员核对' : '业务事实已确认的单据'">说明</div>
+        </div>
+    </div>
+
+    <div class="section-title">你可以做什么</div>
+    <div class="grid cols-3">
+        <div class="card">
+            <h3>① 自助查有效制度</h3>
+            <p class="muted">按类别浏览或直接用自然语言提问，答复只依据现行有效制度，并给出制度编号与版本。</p>
+            <div class="btn-row">
+                <a class="btn-ghost btn-sm" th:href="@{/policies}" style="padding:5px 10px">浏览制度</a>
+                <a class="btn-ghost btn-sm" th:href="@{/consult}" style="padding:5px 10px">制度问答</a>
+            </div>
+        </div>
+        <div class="card">
+            <h3>② 经授权查本人单据</h3>
+            <p class="muted">系统按归属校验，只能看到自己提交的单据；跨人访问会被拒绝。</p>
+            <div class="btn-row">
+                <a class="btn-ghost btn-sm" th:href="@{/documents}" style="padding:5px 10px">我的单据</a>
+            </div>
+        </div>
+        <div class="card">
+            <h3>③ 角色分工</h3>
+            <p class="muted">
+                制度由行政专员<strong>乔姐</strong>维护；
+                单据的业务事实由财务专员<strong>周敏</strong>核对。
+            </p>
+            <div class="btn-row">
+                <a th:if="${user != null and user.role.name() == 'ADMIN'}" class="btn-ghost btn-sm"
+                   th:href="@{/policies}" style="padding:5px 10px">去维护制度</a>
+                <a th:if="${user != null and user.role.name() == 'FINANCE'}" class="btn-ghost btn-sm"
+                   th:href="@{/documents}" style="padding:5px 10px">去核对事实</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/app.js}"></script>
+<script th:inline="javascript">
+    const ROLE = /*[[${user != null ? user.role.name() : ''}]]*/ '';
+
+    // 被拦截的越权访问提示
+    if (window.location.search.indexOf('forbidden=1') >= 0) {
+        showAlert(document.getElementById('alert'), '无权访问该功能：当前角色权限不足。', false);
+    }
+
+    async function loadStats() {
+        try {
+            const policies = await api('/api/policies/valid');
+            document.getElementById('statPolicies').textContent = policies.length;
+        } catch (e) {
+            document.getElementById('statPolicies').textContent = '-';
+        }
+        try {
+            const mine = await api('/api/documents/my');
+            document.getElementById('statMyDocs').textContent = mine.length;
+        } catch (e) {
+            document.getElementById('statMyDocs').textContent = '-';
+        }
+        if (ROLE === 'FINANCE') {
+            try {
+                const all = await api('/api/documents');
+                document.getElementById('statPending').textContent =
+                    all.filter(d => !d.factVerified).length;
+            } catch (e) {
+                document.getElementById('statPending').textContent = '-';
+            }
+        } else {
+            try {
+                const mine = await api('/api/documents/my');
+                document.getElementById('statPending').textContent =
+                    mine.filter(d => d.factVerified).length;
+            } catch (e) {
+                document.getElementById('statPending').textContent = '-';
+            }
+        }
+    }
+
+    loadStats();
+</script>
+</body>
+</html>

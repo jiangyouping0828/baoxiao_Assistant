@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>登录 · 报销助手（JYP）</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+<div class="login-page">
+    <div class="login-card">
+        <h1>报销助手 <span class="muted" style="font-size:15px;font-weight:400">JYP</span></h1>
+        <div class="sub">员工自助查有效制度 · 经授权查询本人单据</div>
+
+        <div id="alert" class="alert"></div>
+
+        <label for="username">用户名</label>
+        <input id="username" autocomplete="username" placeholder="请输入用户名">
+
+        <label for="password">密码</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="请输入密码">
+
+        <div style="margin-top:18px">
+            <button class="btn-primary" style="width:100%" onclick="doLogin()">登 录</button>
+        </div>
+
+        <div class="demo-accounts">
+            <h4>演示账号（点击自动填充）</h4>
+            <div id="demoList"></div>
+            <div class="hint">制度由行政专员乔姐维护；单据的业务事实由财务专员周敏核对。</div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/app.js}"></script>
+<script>
+    const alertEl = document.getElementById('alert');
+
+    async function doLogin() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) {
+            showAlert(alertEl, '请输入用户名和密码', false);
+            return;
+        }
+        try {
+            await api('/api/auth/login', {method: 'POST', body: {username, password}});
+            window.location.href = '/';
+        } catch (e) {
+            showAlert(alertEl, e.message, false);
+        }
+    }
+
+    document.getElementById('password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') doLogin();
+    });
+
+    async function loadDemo() {
+        try {
+            const list = await api('/api/auth/demo-users');
+            const box = document.getElementById('demoList');
+            box.innerHTML = list.map(u => `
+                <div class="demo-item" onclick="fill('${esc(u.username)}','${esc(u.password)}')">
+                    <span>
+                        <span class="who">${esc(u.displayName)}</span>
+                        <span class="meta"> · ${esc(u.roleLabel)} · ${esc(u.department || '')}</span>
+                    </span>
+                    <span class="meta">${esc(u.username)} / ${esc(u.password)}</span>
+                </div>`).join('');
+        } catch (e) {
+            /* 忽略 */
+        }
+    }
+
+    function fill(username, password) {
+        document.getElementById('username').value = username;
+        document.getElementById('password').value = password;
+    }
+
+    loadDemo();
+</script>
+</body>
+</html>

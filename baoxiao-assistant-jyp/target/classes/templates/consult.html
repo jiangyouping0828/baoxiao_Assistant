@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('制度问答 · 报销助手（JYP）')"></head>
+<body>
+<div th:replace="fragments :: nav('consult')"></div>
+
+<div class="wrap">
+    <div id="alert" class="alert"></div>
+
+    <h2 class="page-title">制度问答</h2>
+    <p class="page-sub">
+        用自然语言提问，系统只在<strong>现行有效制度</strong>范围内检索并作答，答复会标注制度编号与版本，便于追溯。
+    </p>
+
+    <div class="card">
+        <label>你的问题</label>
+        <textarea id="question" placeholder="例如：出差住宿费标准是多少？"></textarea>
+        <div class="btn-row" style="margin-top:14px">
+            <button class="btn-primary" onclick="ask()">提问</button>
+            <button class="btn-ghost" onclick="document.getElementById('question').value=''">清空</button>
+        </div>
+        <div class="source-list" id="suggestions"></div>
+    </div>
+
+    <div class="section-title">答复</div>
+    <div class="card">
+        <div id="meta" class="muted" style="margin-bottom:8px"></div>
+        <div class="answer" id="answer">尚未提问。</div>
+        <div class="source-list" id="sources"></div>
+    </div>
+</div>
+
+<script th:src="@{/app.js}"></script>
+<script>
+    const alertEl = document.getElementById('alert');
+    const suggestions = [
+        '出差住宿费一晚能报多少？',
+        '打车一次最多报销多少？',
+        '加班工作餐怎么报？',
+        '业务招待需要事前审批吗？',
+        '办公用品单笔限额是多少？',
+        '远程办公买家具能报销吗？'
+    ];
+
+    function renderSuggestions() {
+        document.getElementById('suggestions').innerHTML = suggestions
+            .map(s => `<span class="source-tag" style="cursor:pointer" onclick="fill('${esc(s)}')">${esc(s)}</span>`)
+            .join('');
+    }
+
+    function fill(text) {
+        document.getElementById('question').value = text;
+    }
+
+    async function ask() {
+        const question = document.getElementById('question').value.trim();
+        if (!question) {
+            showAlert(alertEl, '请输入问题', false);
+            return;
+        }
+        document.getElementById('answer').textContent = '正在检索有效制度…';
+        document.getElementById('meta').textContent = '';
+        document.getElementById('sources').innerHTML = '';
+        try {
+            const res = await api('/api/consult', {method: 'POST', body: {question}});
+            document.getElementById('answer').textContent = res.answer;
+            document.getElementById('meta').textContent =
+                '检索口径：' + res.validOn + ' 当日有效制度 · 命中片段 ' + res.matchedChunks + ' 条';
+            document.getElementById('sources').innerHTML = (res.sources || [])
+                .map(s => `<span class="source-tag">${esc(s.code)} · ${esc(s.title)} · v${s.version}</span>`)
+                .join('');
+        } catch (e) {
+            document.getElementById('answer').textContent = '提问失败：' + e.message;
+        }
+    }
+
+    document.getElementById('question').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask();
+    });
+
+    renderSuggestions();
+</script>
+</body>
+</html>

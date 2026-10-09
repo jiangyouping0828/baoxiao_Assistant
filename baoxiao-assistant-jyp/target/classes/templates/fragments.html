@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title}">报销助手（JYP）</title>
+    <link rel="stylesheet" th:href="@{/app.css}">
+</head>
+<body>
+
+<div th:fragment="nav(active)" class="topbar">
+    <div class="brand">
+        <span class="dot"></span> 报销助手 <span class="muted" style="font-weight:400">JYP</span>
+    </div>
+    <nav class="nav">
+        <a th:href="@{/}" th:classappend="${active == 'home'} ? 'active'">工作台</a>
+        <a th:href="@{/policies}" th:classappend="${active == 'policies'} ? 'active'">制度查询</a>
+        <a th:href="@{/consult}" th:classappend="${active == 'consult'} ? 'active'">制度问答</a>
+        <a th:href="@{/documents}" th:classappend="${active == 'documents'} ? 'active'">我的单据</a>
+        <a th:if="${user != null and user.role.name() == 'ADMIN'}"
+           th:href="@{/policies#maintain}" th:classappend="${active == 'maintain'} ? 'active'">制度维护</a>
+        <a th:if="${user != null and user.role.name() == 'FINANCE'}"
+           th:href="@{/documents#verify}" th:classappend="${active == 'verify'} ? 'active'">事实核对</a>
+    </nav>
+    <div class="userbox">
+        <span th:if="${user != null}">
+            <span class="role-chip" th:classappend="${user.role.name()}"
+                  th:text="${user.roleLabel}">角色</span>
+            <span th:text="${user.displayName}">用户</span>
+        </span>
+        <button class="btn-ghost btn-sm" onclick="logout()">退出</button>
+    </div>
+</div>
+
+</body>
+</html>

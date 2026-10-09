@@ -1,0 +1,478 @@
+:root {
+    --brand: #2563eb;
+    --brand-dark: #1d4ed8;
+    --brand-soft: #eff6ff;
+    --ink: #0f172a;
+    --ink-2: #475569;
+    --ink-3: #94a3b8;
+    --line: #e2e8f0;
+    --bg: #f6f8fc;
+    --card: #ffffff;
+    --ok: #16a34a;
+    --ok-soft: #f0fdf4;
+    --warn: #d97706;
+    --warn-soft: #fffbeb;
+    --bad: #dc2626;
+    --bad-soft: #fef2f2;
+    --radius: 12px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+a {
+    color: var(--brand);
+    text-decoration: none;
+}
+
+/* ---------------- 顶部导航 ---------------- */
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.brand {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    margin-right: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--brand);
+}
+
+.nav {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+}
+
+.nav a {
+    padding: 7px 14px;
+    border-radius: 8px;
+    color: var(--ink-2);
+    font-weight: 500;
+}
+
+.nav a:hover {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+}
+
+.nav a.active {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+}
+
+.userbox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ink-2);
+}
+
+.role-chip {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+}
+
+.role-chip.ADMIN {
+    background: #f5f3ff;
+    color: #6d28d9;
+}
+
+.role-chip.FINANCE {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+/* ---------------- 布局 ---------------- */
+.wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+
+.page-sub {
+    color: var(--ink-2);
+    margin: 0 0 20px;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+}
+
+.grid.cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid.cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 900px) {
+    .grid.cols-3, .grid.cols-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+}
+
+.card h3 {
+    margin: 0 0 12px;
+    font-size: 15px;
+}
+
+.stat {
+    text-align: left;
+}
+
+.stat .num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--brand-dark);
+}
+
+.stat .lbl {
+    color: var(--ink-2);
+}
+
+/* ---------------- 表格 ---------------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+th, td {
+    text-align: left;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+}
+
+th {
+    color: var(--ink-2);
+    font-weight: 600;
+    background: #fafbfd;
+    white-space: nowrap;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.table-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+/* ---------------- 表单控件 ---------------- */
+label {
+    display: block;
+    font-weight: 600;
+    color: var(--ink-2);
+    margin: 12px 0 6px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background: #fff;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: 2px solid #bfdbfe;
+    border-color: var(--brand);
+}
+
+textarea {
+    resize: vertical;
+    min-height: 96px;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.btn-primary {
+    background: var(--brand);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--brand-dark);
+}
+
+.btn-ghost {
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+}
+
+.btn-ghost:hover {
+    border-color: var(--brand);
+    color: var(--brand-dark);
+}
+
+.btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.btn-ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+    border: 1px solid #bbf7d0;
+}
+
+.btn-bad {
+    background: var(--bad-soft);
+    color: var(--bad);
+    border: 1px solid #fecaca;
+}
+
+.btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ---------------- 徽标 ---------------- */
+.badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge.DRAFT {
+    background: #f1f5f9;
+    color: var(--ink-2);
+}
+
+.badge.PUBLISHED {
+    background: var(--ok-soft);
+    color: var(--ok);
+}
+
+.badge.ARCHIVED {
+    background: #f1f5f9;
+    color: var(--ink-3);
+}
+
+.badge.SUBMITTED {
+    background: var(--warn-soft);
+    color: var(--warn);
+}
+
+.badge.CHECKING {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+}
+
+.badge.VERIFIED {
+    background: var(--ok-soft);
+    color: var(--ok);
+}
+
+.badge.REJECTED {
+    background: var(--bad-soft);
+    color: var(--bad);
+}
+
+.badge.EXPIRED {
+    background: #f1f5f9;
+    color: var(--ink-3);
+}
+
+/* ---------------- 提示 ---------------- */
+.alert {
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin: 12px 0;
+    display: none;
+}
+
+.alert.show {
+    display: block;
+}
+
+.alert.ok {
+    background: var(--ok-soft);
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.alert.err {
+    background: var(--bad-soft);
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.muted {
+    color: var(--ink-3);
+}
+
+.answer {
+    white-space: pre-wrap;
+    background: #fbfcfe;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+    min-height: 60px;
+}
+
+.source-list {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.source-tag {
+    background: var(--brand-soft);
+    color: var(--brand-dark);
+    border-radius: 999px;
+    padding: 3px 11px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.section-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 24px 0 10px;
+}
+
+/* ---------------- 登录页 ---------------- */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eef4ff 0%, #f8fbff 60%, #eefaf3 100%);
+    padding: 24px;
+}
+
+.login-card {
+    width: 420px;
+    max-width: 100%;
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.10);
+    border: 1px solid var(--line);
+}
+
+.login-card h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+}
+
+.login-card .sub {
+    color: var(--ink-2);
+    margin-bottom: 22px;
+}
+
+.demo-accounts {
+    margin-top: 22px;
+    border-top: 1px dashed var(--line);
+    padding-top: 16px;
+}
+
+.demo-accounts h4 {
+    font-size: 13px;
+    color: var(--ink-2);
+    margin: 0 0 10px;
+}
+
+.demo-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.demo-item:hover {
+    background: var(--brand-soft);
+    border-color: #dbeafe;
+}
+
+.demo-item .who {
+    font-weight: 600;
+}
+
+.demo-item .meta {
+    color: var(--ink-3);
+    font-size: 12px;
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-top: 6px;
+}
+
+.empty {
+    padding: 28px;
+    text-align: center;
+    color: var(--ink-3);
+}
